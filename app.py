@@ -57,7 +57,7 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 # CONNECT TO DB
-engine = create_engine('sqlite:///blog.db')
+engine = create_engine(os.environ.get("DATABASE_URL",  "sqlite:///blog.db"))
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
 Session = sessionmaker(engine, expire_on_commit=False)
 
