@@ -12,6 +12,7 @@ from forms import CreatePostForm, CommentForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
 from urllib import parse
 import os
+import pyodbc
 
 Base = automap_base()
 login_manager = LoginManager()
