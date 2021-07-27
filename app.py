@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm, CommentForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
+from urllib import parse
 import os
 
 Base = automap_base()
@@ -57,7 +58,8 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 # CONNECT TO DB
-engine = create_engine(os.environ.get("DATABASE_FILE"))
+connection_string = parse.quote_plus("DRIVER={SQL Server};SERVER=WGTI-ML-191218\\SQLEXPRESS;DATABASE=blog_db")
+engine = create_engine(f"mssql+pyodbc:///?odbc_connect={connection_string}")
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
 Session = sessionmaker(engine, expire_on_commit=False)
 
