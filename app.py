@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm, CommentForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
-import uuid
+import os
 
 Base = automap_base()
 login_manager = LoginManager()
@@ -43,7 +43,7 @@ class Comment(Base):
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = uuid.uuid4().hex
+app.secret_key = os.environ["Secret_Key"]
 login_manager.init_app(app)
 ckeditor = CKEditor(app)
 Bootstrap(app)
