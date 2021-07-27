@@ -32,10 +32,8 @@
     <div class="row">
 
         <div class="col-lg-8 col-md-10 mx-auto content">
-            <form action="{{ url_for('login') }}">
-                {{ form.csrf_token }}
-                {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
-            </form>
+            {{ form.csrf_token }}
+            {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
         </div>
     </div>
 </div>
