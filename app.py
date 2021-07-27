@@ -59,7 +59,7 @@ gravatar = Gravatar(app,
 # CONNECT TO DB
 engine = create_engine('sqlite:///blog.db')
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
-Session = sessionmaker(engine, expire_on_commit=False)
+Session = scoped_session(sessionmaker(engine, expire_on_commit=False))
 
 
 @login_manager.user_loader
