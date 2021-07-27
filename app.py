@@ -4,7 +4,7 @@ from flask_ckeditor import CKEditor
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine, Column, Integer, ForeignKey
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.exc import IntegrityError
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
@@ -59,7 +59,7 @@ gravatar = Gravatar(app,
 # CONNECT TO DB
 engine = create_engine('sqlite:///blog.db')
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
-Session = sessionmaker(engine, expire_on_commit=False)
+Session = scoped_session(sessionmaker(engine, expire_on_commit=False))
 
 
 @login_manager.user_loader
