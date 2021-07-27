@@ -43,7 +43,7 @@ class Comment(Base):
 
 
 app = Flask(__name__)
-app.secret_key = os.environ["Secret_Key"]
+app.secret_key = os.environ.get("SECRET_KEY")
 login_manager.init_app(app)
 ckeditor = CKEditor(app)
 Bootstrap(app)
