@@ -59,12 +59,12 @@ gravatar = Gravatar(app,
 # CONNECT TO DB
 engine = create_engine('sqlite:///blog.db')
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
-Session = scoped_session(sessionmaker(engine, expire_on_commit=False))
+Session = sessionmaker(engine, expire_on_commit=False)
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    with Session.begin() as session:
+    with Session() as session:
         user = session.query(User).filter_by(id=user_id).first()
         return user
 
@@ -76,7 +76,7 @@ def unauthorized():
 
 @app.route('/')
 def get_all_posts():
-    with Session.begin() as session:
+    with Session() as session:
         posts = session.query(BlogPost)
         return render_template("index.html", all_posts=posts, user=current_user)
 
@@ -86,7 +86,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         try:
-            with Session.begin() as session:
+            with Session() as session:
                 pw_hash = generate_password_hash(
                                 form.password.data,
                                 method='pbkdf2:sha256',
@@ -99,6 +99,7 @@ def register():
                 session.add(new_user)
                 session.flush()
                 login_user(new_user)
+                session.commit()
                 return redirect(url_for("get_all_posts"))
         except IntegrityError:
             flash("It looks like that email account has already been registered. Try logging in.")
@@ -111,7 +112,7 @@ def login():
     form = LoginForm()
     if request.method == "POST":
         if form.validate_on_submit():
-            with Session.begin() as session:
+            with Session() as session:
                 user = session.query(User).filter_by(email=form.email.data).first()
                 if user is not None:
                     pw_hash = user.password
@@ -137,7 +138,7 @@ def logout():
 @app.route("/post/<int:post_id>")
 def show_post(post_id):
     form = CommentForm()
-    with Session.begin() as session:
+    with Session() as session:
         requested_post = session.query(BlogPost).filter_by(id=post_id).first()
         return render_template("post.html", post=requested_post, form=form, user=current_user)
 
@@ -166,8 +167,9 @@ def add_new_post():
             date=date.today().strftime("%B %d, %Y"),
             user_id=current_user.id
         )
-        with Session.begin() as session:
+        with Session() as session:
             session.add(new_post)
+            session.commit()
             return redirect(url_for("get_all_posts"))
     return render_template("make-post.html", form=form, user=current_user)
 
@@ -175,7 +177,7 @@ def add_new_post():
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 @login_required
 def edit_post(post_id):
-    with Session.begin() as session:
+    with Session() as session:
         post = session.query(BlogPost).filter_by(id=post_id).first()
         edit_form = CreatePostForm(
             title=post.title,
@@ -189,17 +191,18 @@ def edit_post(post_id):
                 "img_url": edit_form.img_url.data,
                 "body": edit_form.body.data}
             session.query(BlogPost).filter_by(id=post_id).update(edited_post)
+            session.commit()
             return redirect(url_for("show_post", post_id=post.id))
-
         return render_template("make-post.html", form=edit_form, user=current_user)
 
 
 @app.route("/delete/<int:post_id>")
 @login_required
 def delete_post(post_id):
-    with Session.begin() as session:
+    with Session() as session:
         post_to_delete = session.query(BlogPost).filter_by(id=post_id).first()
         session.delete(post_to_delete)
+        session.commit()
         return redirect(url_for('get_all_posts'))
 
 
@@ -210,8 +213,9 @@ def comment():
     new_comment = Comment(text=request.form["comment"],
                           user_id=current_user.id,
                           post_id=post_id)
-    with Session.begin() as session:
+    with Session() as session:
         session.add(new_comment)
+        session.commit()
         return redirect(url_for("show_post", post_id=post_id))
 
 
@@ -220,7 +224,7 @@ def comment():
 # def delete_comment():
 #     comment_id = request.args.get("comment_id")
 #     post_id = request.args.get("post_id")
-#     with Session.begin() as session:
+#     with Session() as session:
 #         comment = session.query(Comment).filter_by(id=comment_id).first()
 #         session.delete(comment)
 #         return redirect(url_for('get_all_posts'))
