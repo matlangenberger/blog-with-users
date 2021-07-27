@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
+from flask_heroku import Heroku
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine, Column, Integer, ForeignKey
@@ -47,6 +48,7 @@ app.config['SECRET_KEY'] = uuid.uuid4().hex
 login_manager.init_app(app)
 ckeditor = CKEditor(app)
 Bootstrap(app)
+Heroku(app)
 gravatar = Gravatar(app,
                     size=100,
                     rating='g',
