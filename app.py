@@ -58,8 +58,7 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 # CONNECT TO DB
-connection_string = parse.quote_plus("DRIVER={SQL Server};SERVER=WGTI-ML-191218\\SQLEXPRESS;DATABASE=blog_db")
-engine = create_engine(f"mssql+pyodbc:///?odbc_connect={connection_string}")
+engine = create_engine("sqlite:///blog.db")
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
 Session = sessionmaker(engine, expire_on_commit=False)
 
