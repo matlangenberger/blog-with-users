@@ -10,8 +10,9 @@ from sqlalchemy.exc import IntegrityError
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm, CommentForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
+import uuid
 from urllib import parse
-import os
+
 
 Base = automap_base()
 login_manager = LoginManager()
@@ -43,12 +44,12 @@ class Comment(Base):
     post = relationship("BlogPost", back_populates="comments")
 
 
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY")
-login_manager.init_app(app)
-ckeditor = CKEditor(app)
-Bootstrap(app)
-gravatar = Gravatar(app,
+application = Flask(__name__)
+application.secret_key = uuid.uuid4().hex
+login_manager.init_app(application)
+ckeditor = CKEditor(application)
+Bootstrap(application)
+gravatar = Gravatar(application,
                     size=100,
                     rating='g',
                     default='retro',
@@ -58,7 +59,8 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 # CONNECT TO DB
-engine = create_engine("sqlite:///blog.db")
+connection_string = parse.quote_plus("DRIVER={SQL Server};SERVER=WGTI-ML-191218\\SQLEXPRESS;DATABASE=blog_db")
+engine = create_engine(f"mssql+pyodbc:///?odbc_connect={connection_string}")
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
 Session = sessionmaker(engine, expire_on_commit=False)
 
@@ -75,14 +77,14 @@ def unauthorized():
     return render_template("unauthorized.html")
 
 
-@app.route('/')
+@application.route('/')
 def get_all_posts():
     with Session.begin() as session:
         posts = session.query(BlogPost)
         return render_template("index.html", all_posts=posts, user=current_user)
 
 
-@app.route('/register', methods=["GET", "POST"])
+@application.route('/register', methods=["GET", "POST"])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
@@ -107,7 +109,7 @@ def register():
     return render_template("register.html", form=form, user=current_user)
 
 
-@app.route('/login', methods=["GET", "POST"])
+@application.route('/login', methods=["GET", "POST"])
 def login():
     form = LoginForm()
     if request.method == "POST":
@@ -129,13 +131,13 @@ def login():
     return render_template("login.html", form=form, user=current_user)
 
 
-@app.route('/logout')
+@application.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('get_all_posts'))
 
 
-@app.route("/post/<int:post_id>")
+@application.route("/post/<int:post_id>")
 def show_post(post_id):
     form = CommentForm()
     with Session.begin() as session:
@@ -143,17 +145,17 @@ def show_post(post_id):
         return render_template("post.html", post=requested_post, form=form, user=current_user)
 
 
-@app.route("/about")
+@application.route("/about")
 def about():
     return render_template("about.html", user=current_user)
 
 
-@app.route("/contact")
+@application.route("/contact")
 def contact():
     return render_template("contact.html", user=current_user)
 
 
-@app.route("/new-post", methods=["GET", "POST"])
+@application.route("/new-post", methods=["GET", "POST"])
 @login_required
 def add_new_post():
     form = CreatePostForm()
@@ -173,7 +175,7 @@ def add_new_post():
     return render_template("make-post.html", form=form, user=current_user)
 
 
-@app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
+@application.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 @login_required
 def edit_post(post_id):
     with Session.begin() as session:
@@ -195,7 +197,7 @@ def edit_post(post_id):
         return render_template("make-post.html", form=edit_form, user=current_user)
 
 
-@app.route("/delete/<int:post_id>")
+@application.route("/delete/<int:post_id>")
 @login_required
 def delete_post(post_id):
     with Session.begin() as session:
@@ -204,7 +206,7 @@ def delete_post(post_id):
         return redirect(url_for('get_all_posts'))
 
 
-@app.route("/comment", methods=["POST"])
+@application.route("/comment", methods=["POST"])
 @login_required
 def comment():
     post_id = request.args.get("post_id")
@@ -228,4 +230,4 @@ def comment():
 
 
 if __name__ == "__main__":
-    app.run()
+    application.run()
