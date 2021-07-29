@@ -34,3 +34,4 @@ wcwidth==0.1.9
 Werkzeug==2.0.1
 WTForms==2.3.3
 email_validator
+psycopg2-binary==2.9.1

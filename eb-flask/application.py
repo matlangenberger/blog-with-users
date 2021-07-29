@@ -11,6 +11,7 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreatePostForm, CommentForm, RegisterForm, LoginForm
 from flask_gravatar import Gravatar
 import uuid
+import os
 from urllib import parse
 
 
@@ -59,8 +60,10 @@ gravatar = Gravatar(application,
                     base_url=None)
 
 # CONNECT TO DB
-connection_string = parse.quote_plus("DRIVER={SQL Server};SERVER=WGTI-ML-191218\\SQLEXPRESS;DATABASE=blog_db")
-engine = create_engine(f"mssql+pyodbc:///?odbc_connect={connection_string}")
+root = os.environ.get("ROOT_USER")
+password = os.environ.get("PASSWORD")
+connection_string = f"{root}:{password}@blogdb.ctqcyywtwuba.us-east-2.rds.amazonaws.com:5432/blog_db"
+engine = create_engine(f"postgresql://{connection_string}")
 Base.prepare(engine, reflect=True, generate_relationship=ignore_relationships)
 Session = sessionmaker(engine, expire_on_commit=False)
 
@@ -97,7 +100,7 @@ def register():
                             )
                 new_user = User(
                     name=form.name.data,
-                    email=form.email.data,
+                    email=form.email.data.lower(),
                     password=pw_hash)
                 session.add(new_user)
                 session.flush()
@@ -115,7 +118,7 @@ def login():
     if request.method == "POST":
         if form.validate_on_submit():
             with Session.begin() as session:
-                user = session.query(User).filter_by(email=form.email.data).first()
+                user = session.query(User).filter_by(email=form.email.data.lower()).first()
                 if user is not None:
                     pw_hash = user.password
                     if check_password_hash(pw_hash, form.password.data):
